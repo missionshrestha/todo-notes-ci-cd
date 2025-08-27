@@ -205,3 +205,35 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+
+
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.parcel-cache/
+dist/
+build/
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# Docker
+*.pid
+*.log
+.DS_Store
+
+# Editor
+.idea/
+.vscode/
