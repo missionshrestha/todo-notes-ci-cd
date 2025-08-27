@@ -2,24 +2,22 @@ import axios from "axios";
 import { getAccessToken, getRefreshToken, loginLocal, logoutLocal } from "../features/auth/useAuth.js";
 
 // ---- Base URL from ENV (sanitize trailing slash) ----
-const baseURL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+export const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 
 // ---- Axios instance ----
 export const api = axios.create({
-  baseURL,
+  baseURL: API_BASE,
   headers: {
     "Content-Type": "application/json",
     "X-Requested-With": "XMLHttpRequest",
   },
-  withCredentials: false, // we use localStorage tokens, not cookies
+  withCredentials: false, // using localStorage tokens
 });
 
 // ---- Request: attach Authorization if token exists ----
 api.interceptors.request.use((config) => {
   const token = getAccessToken();
-  if (token) {
-    config.headers = { ...config.headers, Authorization: `Bearer ${token}` };
-  }
+  if (token) config.headers = { ...config.headers, Authorization: `Bearer ${token}` };
   return config;
 });
 
@@ -49,14 +47,12 @@ api.interceptors.response.use(
     if (status === 401 && !config._retry) {
       const refresh = getRefreshToken();
       if (!refresh) {
-        // No refresh token -> logout
         logoutLocal();
         window.location.href = "/login";
         return Promise.reject(error);
       }
 
       if (isRefreshing) {
-        // If a refresh is in flight, just logout to keep logic simple
         logoutLocal();
         window.location.href = "/login";
         return Promise.reject(error);
@@ -66,20 +62,15 @@ api.interceptors.response.use(
         isRefreshing = true;
         config._retry = true;
 
-        // POST /api/auth/refresh/ expects {refresh} and returns {access}
-        const url = baseURL + "/auth/refresh/";
+        const url = API_BASE + "/auth/refresh/";
         const { data } = await axios.post(url, { refresh });
 
         if (data?.access) {
-          // Save new access, keep the same refresh
           loginLocal(data.access, refresh);
-
-          // Retry the original request with the new token
           const retryCfg = { ...config };
           retryCfg.headers = { ...retryCfg.headers, Authorization: `Bearer ${data.access}` };
           return api.request(retryCfg);
         } else {
-          // Unexpected shape -> logout
           logoutLocal();
           window.location.href = "/login";
           return Promise.reject(error);
