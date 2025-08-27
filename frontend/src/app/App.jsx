@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import ApiErrorBanner from "../components/ApiErrorBanner.jsx";
 import Navbar from "../components/Navbar";
 import ProtectedRoute from "../components/ProtectedRoute";
 import HealthPage from "../pages/HealthPage";
@@ -10,6 +11,7 @@ export default function App() {
   return (
     <>
       <Navbar />
+      <ApiErrorBanner />
       <main className="container">
         <Routes>
           <Route path="/" element={<Navigate to="/notes" replace />} />
