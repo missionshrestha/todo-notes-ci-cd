@@ -5,8 +5,13 @@ from .serializers import NoteSerializer
 class NoteViewSet(viewsets.ModelViewSet):
     """
     Simple CRUD for notes.
-    Auth/permissions will be tightened in 1.3.
+    Auth required; user sees only their notes.
     """
-    queryset = Note.objects.all().order_by("-updated_at")
     serializer_class = NoteSerializer
-    permission_classes = [permissions.AllowAny]  
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Note.objects.filter(owner=self.request.user).order_by("-updated_at")
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
