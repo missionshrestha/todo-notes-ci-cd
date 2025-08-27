@@ -1,0 +1,7 @@
+name: PROD Deploy (placeholder)
+on: workflow_dispatch
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Placeholder – will be replaced in Section 9.2"
