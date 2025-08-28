@@ -1,2 +1,20 @@
 version: "3.9"
-services: {}
+
+services:
+  db:
+    image: postgres:16
+    container_name: notes_db_prod
+    env_file:
+      - ../backend/.env.prod
+    volumes:
+      - prod_pgdata:/var/lib/postgresql/data
+    # No host port published in PROD — DB is internal only
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-notesuser} -d ${POSTGRES_DB:-notesdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+volumes:
+  prod_pgdata:

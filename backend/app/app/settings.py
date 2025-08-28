@@ -79,12 +79,12 @@ WSGI_APPLICATION = 'app.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 
 # Password validation
@@ -122,14 +122,18 @@ SIMPLE_JWT = {
 CORS_ALLOW_ALL_ORIGINS = os.getenv("CORS_ALLOW_ALL_ORIGINS", "True").lower() == "true"
 
 
-DB_NAME = os.getenv("DB_NAME", "notesdb")
-DB_USER = os.getenv("DB_USER", "notesuser")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "notespass")
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PORT = os.getenv("DB_PORT", "5432")
+DB_NAME = os.getenv("POSTGRES_DB", "notesdb")
+DB_USER = os.getenv("POSTGRES_USER", "notesuser")
+DB_PASSWORD = os.getenv("POSTGRES_PASSWORD", "notespass")
+DB_HOST = os.getenv("POSTGRES_HOST", "localhost")
+DB_PORT = os.getenv("POSTGRES_PORT", "5432")
 
+print(f"DB_NAME: {DB_NAME}")
+print(f"DB_USER: {DB_USER}")
+print(f"DEFAULT DATABASE: {os.getenv('DEFAULT_DB')}")
 if os.getenv("DEFAULT_DB") == "postgres":
-    DATABASES ={
+    print("Using PostgreSQL database")
+    DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
             "NAME": DB_NAME,
@@ -140,6 +144,7 @@ if os.getenv("DEFAULT_DB") == "postgres":
     },
 }
 else:
+    print("Using SQLite database")
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",

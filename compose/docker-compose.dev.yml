@@ -1,2 +1,24 @@
 version: "3.9"
-services: {}
+
+services:
+  db:
+    image: postgres:16
+    container_name: notes_db_dev
+    env_file:
+      - ../backend/.env.dev
+    # The Postgres image uses these envs:
+    #   POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD
+    volumes:
+      - dev_pgdata:/var/lib/postgresql/data
+    # Optional: expose for local DB tools (pgAdmin, DBeaver). Comment out if not needed.
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-notesuser} -d ${POSTGRES_DB:-notesdb}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # No restart policy in dev; easier to debug
+
+volumes:
+  dev_pgdata:
