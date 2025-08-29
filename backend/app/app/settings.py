@@ -122,6 +122,15 @@ SIMPLE_JWT = {
 CORS_ALLOW_ALL_ORIGINS = os.getenv("CORS_ALLOW_ALL_ORIGINS", "True").lower() == "true"
 
 
+# Your frontend origins
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+]
+CORS_ALLOW_CREDENTIALS = False  # no cookies needed for pure JWT
+
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "*"]  # '*' ok for dev
+
 DB_NAME = os.getenv("POSTGRES_DB", "notesdb")
 DB_USER = os.getenv("POSTGRES_USER", "notesuser")
 DB_PASSWORD = os.getenv("POSTGRES_PASSWORD", "notespass")
