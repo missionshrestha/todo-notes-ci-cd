@@ -1,12 +1,16 @@
 # Importing required libraries
-from rest_framework import viewsets, permissions
+from rest_framework import permissions, viewsets
+
 from .models import Note
-from .serializers import NoteSerializer 
+from .serializers import NoteSerializer
+
+
 class NoteViewSet(viewsets.ModelViewSet):
     """
     Simple CRUD for notes.
     Auth required; user sees only their notes.
     """
+
     serializer_class = NoteSerializer
     permission_classes = [permissions.IsAuthenticated]
 

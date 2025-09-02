@@ -19,7 +19,10 @@ export default function Navbar() {
 
   return (
     <header style={{ borderBottom: "1px solid #444", marginBottom: 16 }}>
-      <nav className="container" style={{ display: "flex", gap: 16, alignItems: "center", padding: "0.75rem 0" }}>
+      <nav
+        className="container"
+        style={{ display: "flex", gap: 16, alignItems: "center", padding: "0.75rem 0" }}
+      >
         <strong>Notes</strong>
         <Link to="/notes">Notes</Link>
         <Link to="/health">Health</Link>

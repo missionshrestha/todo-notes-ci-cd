@@ -1,6 +1,7 @@
-from django.test import TestCase
 from django.contrib.auth import get_user_model
+from django.test import TestCase
 from django.utils import timezone
+
 from notes.models import Note
 
 User = get_user_model()
@@ -32,7 +33,7 @@ class NoteModelTests(TestCase):
     def test_status_choices_validation(self):
         n = Note(owner=self.user, title="Choice")
         n.status = "DONE"  # valid
-        n.full_clean()     # should not raise
+        n.full_clean()  # should not raise
         # invalid status should raise
         n.status = "NOT_A_STATUS"
         with self.assertRaises(Exception):

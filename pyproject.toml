@@ -1,0 +1,15 @@
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+# Lint rules: start simple; you can enable more later
+lint.select = ["E", "F", "W", "I"]  # pycodestyle/pyflakes/warnings/imports
+lint.ignore = ["E203"]              # if you like Black-like slicing spacing
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+
+# If your Django project lives in backend/app:
+[tool.ruff.lint.per-file-ignores]
+"backend/app/**" = ["F401"]  # example: ignore unused-imports in __init__.py, tweak as needed

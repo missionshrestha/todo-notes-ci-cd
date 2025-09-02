@@ -45,9 +45,7 @@ export default function LoginPage() {
       nav(from, { replace: true });
     } catch (e2) {
       const msg =
-        e2?.response?.data?.detail ||
-        e2?.message ||
-        "Login failed. Check username/password.";
+        e2?.response?.data?.detail || e2?.message || "Login failed. Check username/password.";
       setErr(msg);
     } finally {
       setLoading(false);

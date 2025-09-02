@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Usage: wait-healthy <compose-file> <service> [timeout_seconds]
+set -euo pipefail
+FILE="${1:?compose file required}"
+SERVICE="${2:?service name required}"
+TIMEOUT="${3:-120}"
+
+CID="$(docker compose -f "$FILE" ps -q "$SERVICE" || true)"
+if [ -z "$CID" ]; then
+  echo "Service '$SERVICE' container not found (did you 'up -d'?)." >&2
+  exit 2
+fi
+
+deadline=$(( $(date +%s) + TIMEOUT ))
+while true; do
+  status="$(docker inspect --format '{{.State.Health.Status}}' "$CID" 2>/dev/null || echo 'none')"
+  if [ "$status" = "healthy" ]; then
+    echo "Service '$SERVICE' is healthy."
+    exit 0
+  fi
+  if [ "$(date +%s)" -ge "$deadline" ]; then
+    echo "Timeout waiting for '$SERVICE' to become healthy (last status: $status)." >&2
+    docker ps --format 'table {{.Names}}\t{{.Status}}' | sed -n '1,200p'
+    exit 1
+  fi
+  echo "Waiting for '$SERVICE' (status: $status)..."
+  sleep 3
+done

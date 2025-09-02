@@ -63,11 +63,7 @@ export default function NoteEditPage() {
     <section>
       <h2>Edit Note</h2>
       <form onSubmit={onSave} style={{ display: "grid", gap: 8, maxWidth: 520 }}>
-        <input
-          placeholder="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
+        <input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
         <textarea
           placeholder="Content"
           rows={6}
@@ -79,14 +75,20 @@ export default function NoteEditPage() {
           <select value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="">(not set)</option>
             {STATUS_OPTIONS.map((s) => (
-              <option key={s} value={s}>{s}</option>
+              <option key={s} value={s}>
+                {s}
+              </option>
             ))}
           </select>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button type="submit">Save</button>
-          <button type="button" onClick={onDelete}>Delete</button>
-          <Link to="/notes" style={{ marginLeft: "auto" }}>Back to list</Link>
+          <button type="button" onClick={onDelete}>
+            Delete
+          </button>
+          <Link to="/notes" style={{ marginLeft: "auto" }}>
+            Back to list
+          </Link>
         </div>
         {err && <p style={{ color: "tomato", margin: 0 }}>{err}</p>}
       </form>
