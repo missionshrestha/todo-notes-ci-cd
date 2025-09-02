@@ -5,7 +5,7 @@ services:
     image: postgres:16
 
     env_file:
-      - ../backend/.env.dev
+      - ../backend/.env.prod
 
     volumes:
       - prod_pgdata:/var/lib/postgresql/data
@@ -24,7 +24,7 @@ services:
       target: runtime            # CI can override to 'nuitka-runtime' for experiments
 
     env_file:
-      - ../backend/.env.dev
+      - ../backend/.env.prod
 
     depends_on:
       db:
