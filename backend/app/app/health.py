@@ -1,10 +1,11 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+import os
+import socket
+
 from django.conf import settings
 from django.db import connection
-import socket
-import os
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 
 class HealthView(APIView):
@@ -14,6 +15,7 @@ class HealthView(APIView):
     GET /api/health/           -> {"status": "ok"}
     GET /api/health/?checks=1  -> adds DB and metadata checks (optional)
     """
+
     permission_classes = [AllowAny]
 
     def get(self, request):
@@ -27,12 +29,14 @@ class HealthView(APIView):
             except Exception as e:
                 db_state = f"error: {type(e).__name__}"
 
-            payload.update({
-                "db": db_state,
-                "debug": bool(getattr(settings, "DEBUG", False)),
-                "hostname": socket.gethostname(),
-                # Wire this from CI later (Section 9) if you want:
-                "commit": os.getenv("GIT_COMMIT_SHA", ""),
-                "app": "backend",
-            })
+            payload.update(
+                {
+                    "db": db_state,
+                    "debug": bool(getattr(settings, "DEBUG", False)),
+                    "hostname": socket.gethostname(),
+                    # Wire this from CI later (Section 9) if you want:
+                    "commit": os.getenv("GIT_COMMIT_SHA", ""),
+                    "app": "backend",
+                }
+            )
         return Response(payload, status=200)

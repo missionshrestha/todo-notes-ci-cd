@@ -155,3 +155,16 @@ dev-seed-clear:
 
 prod-seed:
 	$(DC) -f $(PROD_FILE) exec -T backend $(DJANGO_MANAGE) seed_demo --users=3 --notes=12 --password=demo1234 --allow-prod
+
+
+# PRE-COMMIT
+.PHONY: hooks hooks-run hooks-update
+
+hooks:
+	pre-commit install
+
+hooks-run:
+	pre-commit run --all-files
+
+hooks-update:
+	pre-commit autoupdate

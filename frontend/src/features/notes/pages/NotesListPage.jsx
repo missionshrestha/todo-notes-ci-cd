@@ -57,12 +57,11 @@ export default function NotesListPage() {
     <section>
       <h2>Notes</h2>
 
-      <form onSubmit={onCreate} style={{ display: "grid", gap: 8, maxWidth: 520, marginBottom: 16 }}>
-        <input
-          placeholder="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
+      <form
+        onSubmit={onCreate}
+        style={{ display: "grid", gap: 8, maxWidth: 520, marginBottom: 16 }}
+      >
+        <input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
         <textarea
           placeholder="Content (optional)"
           rows={4}
@@ -84,16 +83,28 @@ export default function NotesListPage() {
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <strong style={{ fontSize: 16 }}>{n.title ?? "(untitled)"}</strong>
                 {n.status ? (
-                  <span style={{ fontSize: 12, opacity: 0.8, border: "1px solid #666", padding: "2px 6px", borderRadius: 999 }}>
+                  <span
+                    style={{
+                      fontSize: 12,
+                      opacity: 0.8,
+                      border: "1px solid #666",
+                      padding: "2px 6px",
+                      borderRadius: 999,
+                    }}
+                  >
                     {n.status}
                   </span>
                 ) : null}
                 <span style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
                   <Link to={`/notes/${n.id}`}>Edit</Link>
-                  <button onClick={() => onDelete(n.id)} type="button">Delete</button>
+                  <button onClick={() => onDelete(n.id)} type="button">
+                    Delete
+                  </button>
                 </span>
               </div>
-              {n.content ? <p style={{ whiteSpace: "pre-wrap", marginTop: 8 }}>{n.content}</p> : null}
+              {n.content ? (
+                <p style={{ whiteSpace: "pre-wrap", marginTop: 8 }}>{n.content}</p>
+              ) : null}
               {n.created_at || n.updated_at ? (
                 <p style={{ fontSize: 12, opacity: 0.7, marginTop: 8 }}>
                   {n.created_at ? `Created: ${new Date(n.created_at).toLocaleString()}` : ""}

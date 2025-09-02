@@ -16,7 +16,9 @@ export default function HealthPage() {
   return (
     <section>
       <h2>Health Check</h2>
-      <p>Backend: <code>{import.meta.env.VITE_API_URL}</code></p>
+      <p>
+        Backend: <code>{import.meta.env.VITE_API_URL}</code>
+      </p>
       <button onClick={check}>Call /health</button>
       <pre style={{ whiteSpace: "pre-wrap" }}>{out}</pre>
     </section>

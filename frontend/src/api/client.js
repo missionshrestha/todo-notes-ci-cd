@@ -1,5 +1,10 @@
 import axios from "axios";
-import { getAccessToken, getRefreshToken, loginLocal, logoutLocal } from "../features/auth/useAuth.js";
+import {
+  getAccessToken,
+  getRefreshToken,
+  loginLocal,
+  logoutLocal,
+} from "../features/auth/useAuth.js";
 
 // ---- Base URL from ENV (sanitize trailing slash) ----
 export const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");

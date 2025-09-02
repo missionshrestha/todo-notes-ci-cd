@@ -1,10 +1,12 @@
 # backend/app/notes/management/commands/seed_demo.py
 from __future__ import annotations
+
 import random
-from datetime import timedelta 
-from django.core.management.base import BaseCommand, CommandError
-from django.contrib.auth import get_user_model
+from datetime import timedelta
+
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
@@ -17,9 +19,13 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--users", type=int, default=3, help="Number of demo users (default 3)")
         parser.add_argument("--notes", type=int, default=12, help="Notes per user (default 12)")
-        parser.add_argument("--password", type=str, default="demo1234", help="Password for all demo users")
+        parser.add_argument(
+            "--password", type=str, default="demo1234", help="Password for all demo users"
+        )
         parser.add_argument("--allow-prod", action="store_true", help="Allow when DEBUG=False")
-        parser.add_argument("--clear", action="store_true", help="Delete demo users & their notes, then exit")
+        parser.add_argument(
+            "--clear", action="store_true", help="Delete demo users & their notes, then exit"
+        )
 
     @transaction.atomic
     def handle(self, *args, **opts):
@@ -51,9 +57,9 @@ class Command(BaseCommand):
                 qs.delete()
                 u.delete()
                 users_deleted += 1
-            self.stdout.write(self.style.WARNING(
-                f"Cleared {notes_deleted} notes and {users_deleted} users."
-            ))
+            self.stdout.write(
+                self.style.WARNING(f"Cleared {notes_deleted} notes and {users_deleted} users.")
+            )
             return
 
         # ---- ensure users exist --------------------------------------------
@@ -78,9 +84,18 @@ class Command(BaseCommand):
 
         # ---- note templates -------------------------------------------------
         titles = [
-            "Buy groceries", "Plan sprint tasks", "Read DRF docs", "Refactor API",
-            "Fix login bug", "Update CI pipeline", "Write tests", "Review PR #42",
-            "Prepare demo", "Backup database", "Draft release notes", "Clean images",
+            "Buy groceries",
+            "Plan sprint tasks",
+            "Read DRF docs",
+            "Refactor API",
+            "Fix login bug",
+            "Update CI pipeline",
+            "Write tests",
+            "Review PR #42",
+            "Prepare demo",
+            "Backup database",
+            "Draft release notes",
+            "Clean images",
         ]
         bodies = [
             "Remember to get milk, eggs, and bread.",
@@ -137,9 +152,12 @@ class Command(BaseCommand):
                         pass
                     created_count += 1
 
-        self.stdout.write(self.style.SUCCESS(
-            f"Seed complete: {len(ensured_users)} users, {per_user} notes/user, {created_count} new notes."
-        ))
-        self.stdout.write(self.style.HTTP_INFO(
-            f"Try login: username='demo'  password='{password}'"
-        ))
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Seed complete: {len(ensured_users)} users, {per_user} notes/user, \
+                {created_count} new notes."
+            )
+        )
+        self.stdout.write(
+            self.style.HTTP_INFO(f"Try login: username='demo'  password='{password}'")
+        )

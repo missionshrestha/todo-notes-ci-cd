@@ -20,7 +20,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     # Make /app the import root so "backend.app.wsgi" works
     PYTHONPATH=/app:/app/backend/app \
-    DJANGO_SETTINGS_MODULE=backend.app.app.settings 
+    DJANGO_SETTINGS_MODULE=backend.app.app.settings
 
     # --- OCI labels (useful for inventory & pruning) ---
 LABEL org.opencontainers.image.title="todo-notes-backend" \

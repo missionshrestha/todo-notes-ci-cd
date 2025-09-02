@@ -73,15 +73,19 @@ limit_request_field_size = _get("GUNICORN_LIMIT_REQUEST_FIELD_SIZE", 8190, int)
 # Add in settings later when enabling HTTPS:
 # SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+
 # Hooks (optional; helpful for diagnostics)
 def on_starting(server):
     server.log.info("Gunicorn starting...")
 
+
 def post_fork(server, worker):
     server.log.info("Worker spawned (pid: %s)", worker.pid)
 
+
 def worker_int(worker):
     worker.log.info("Worker received INT or QUIT signal")
+
 
 def worker_abort(worker):
     worker.log.info("Worker received SIGABRT signal")
