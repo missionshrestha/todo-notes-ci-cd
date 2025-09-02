@@ -4,7 +4,7 @@ DEV_FILE      := compose/docker-compose.dev.yml
 PROD_FILE     := compose/docker-compose.prod.yml
 WAIT          := ./compose/bin/wait-healthy
 PRUNE_SAFE    := ./compose/bin/prune-safe.sh
-DJANGO_MANAGE := python manage.py
+DJANGO_MANAGE := python backend/app/manage.py
 
 # Allow overriding service on the CLI:  make dev-logs S=backend
 S ?= backend
@@ -142,3 +142,16 @@ test-frontend:
 	cd frontend && npm run test:ci
 
 test-all: test-backend test-frontend
+
+
+# SEED DEMO DATA
+.PHONY: dev-seed dev-seed-clear prod-seed
+
+dev-seed:
+	$(DC) -f $(DEV_FILE) exec -T backend $(DJANGO_MANAGE) seed_demo --users=3 --notes=12 --password=demo1234
+
+dev-seed-clear:
+	$(DC) -f $(DEV_FILE) exec -T backend $(DJANGO_MANAGE) seed_demo --clear --users=3
+
+prod-seed:
+	$(DC) -f $(PROD_FILE) exec -T backend $(DJANGO_MANAGE) seed_demo --users=3 --notes=12 --password=demo1234 --allow-prod
