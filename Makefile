@@ -120,3 +120,25 @@ prune-safe:
 
 fmt:
 	@echo "(hook up black/isort/eslint here if you like)"
+
+
+# ====== TEST ======
+.PHONY: test-backend test-frontend test-all
+
+# helper to resolve container id once
+BACKEND_CID := $(shell $(DC) -f $(DEV_FILE) ps -q backend)
+
+test-backend:
+	@echo "==> Ensuring backend container is up"
+	$(DC) -f $(DEV_FILE) up -d backend
+	@echo "==> Copying test requirements into container"
+	docker cp backend/requirements.test.txt $(BACKEND_CID):/app/backend/requirements.test.txt
+	@echo "==> Installing test dependencies inside container"
+	$(DC) -f $(DEV_FILE) exec -T backend sh -lc "pip install -r /app/backend/requirements.test.txt || python -m pip install --user -r /app/backend/requirements.test.txt"
+	@echo "==> Running pytest inside container"
+	$(DC) -f $(DEV_FILE) exec -T backend python -m pytest -q
+
+test-frontend:
+	cd frontend && npm run test:ci
+
+test-all: test-backend test-frontend

@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       build-essential curl \
     && rm -rf /var/lib/apt/lists/*
 # Leverage layer caching: install deps first
-COPY backend/requirements.txt .
+COPY backend/requirements*.txt .
 # Use a persistent pip cache (BuildKit) to speed rebuilds
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
@@ -27,7 +27,7 @@ LABEL org.opencontainers.image.title="todo-notes-backend" \
       org.opencontainers.image.source="https://github.com/you/todo-notes-ci-cd" \
       org.opencontainers.image.description="DRF backend for Todo/Notes" \
       org.opencontainers.image.licenses="MIT"
-      
+
 # Create non-root user
 RUN useradd -m -u 10001 appuser
 # Copy only the installed Python (site-packages + scripts) from builder
