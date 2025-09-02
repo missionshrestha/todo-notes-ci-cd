@@ -3,10 +3,13 @@ version: "3.9"
 services:
   db:
     image: postgres:16
+
     env_file:
       - ../backend/.env.dev
+
     volumes:
       - prod_pgdata:/var/lib/postgresql/data
+
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-notesuser} -d ${POSTGRES_DB:-notesdb}"]
       interval: 10s
@@ -19,11 +22,14 @@ services:
       context: ..
       dockerfile: backend/Dockerfile
       target: runtime            # CI can override to 'nuitka-runtime' for experiments
+
     env_file:
       - ../backend/.env.dev
+
     depends_on:
       db:
         condition: service_healthy
+
     healthcheck:
       test:
         [
@@ -34,6 +40,7 @@ services:
       timeout: 5s
       retries: 12
       start_period: 10s
+
     restart: unless-stopped
 
   # Built app served by nginx
@@ -41,6 +48,7 @@ services:
     build:
       context: ..
       dockerfile: frontend/Dockerfile
+
     restart: unless-stopped
 
   # Public entrypoint
@@ -48,11 +56,17 @@ services:
     build:
       context: ..
       dockerfile: reverse-proxy/Dockerfile
+
     depends_on:
       backend:
         condition: service_healthy
       frontend:
         condition: service_started
+
     ports:
       - "80:80"
+
     restart: unless-stopped
+
+volumes:
+  prod_pgdata:
