@@ -1,0 +1,35 @@
+# .github/workflows/runner-sanity-dev.yml
+name: Runner Sanity (DEV)
+on: workflow_dispatch
+
+jobs:
+  hello-dev:
+    runs-on: [self-hosted, linux, x64, dev]
+    defaults:
+      run:
+        working-directory: /opt/app
+
+    steps:
+      - name: Show runner info
+        run: |
+          whoami
+          uname -a
+          id
+          docker --version
+          docker compose version
+
+          echo "Runner name: $RUNNER_NAME"
+          echo "Runner OS: $RUNNER_OS"
+          echo "Runner architecture: $RUNNER_ARCH"
+          echo "Runner version: $RUNNER_VERSION"
+          echo "GitHub workspace: $GITHUB_WORKSPACE"
+          echo "Current working directory: $(pwd)"
+
+      - name: Repo Status
+        run: |
+          echo "---------------------"
+          echo "Remote repositories:"
+          git status
+          git diff
+          git rev-parse --is-inside-work-tree || true
+          git -C /opt/app remote -v || true
