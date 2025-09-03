@@ -1,35 +1,33 @@
-# .github/workflows/runner-sanity-dev.yml
-name: Runner Sanity (DEV)
+name: 🧪 Runner Sanity (DEV)
 on: workflow_dispatch
 
 jobs:
   hello-dev:
     runs-on: [self-hosted, linux, x64, dev]
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: /opt/app
 
     steps:
-      - name: Show runner info
-        run: |
-          whoami
-          uname -a
-          id
-          docker --version
-          docker compose version
+      - name: 🛡️ Trust /opt/app for Git (once per host)
+        run: git config --global --add safe.directory /opt/app
 
-          echo "Runner name: $RUNNER_NAME"
-          echo "Runner OS: $RUNNER_OS"
-          echo "Runner architecture: $RUNNER_ARCH"
-          echo "Runner version: $RUNNER_VERSION"
-          echo "GitHub workspace: $GITHUB_WORKSPACE"
-          echo "Current working directory: $(pwd)"
-
-      - name: Repo Status
+      - name: 🖥️ Runner & Docker info
         run: |
-          echo "---------------------"
-          echo "Remote repositories:"
-          git status
-          git diff
-          git rev-parse --is-inside-work-tree || true
+          echo "👤 user: $(whoami)"
+          echo "🧩 groups:" && id
+          echo "🐧 kernel:" && uname -a
+          echo "🐳 docker:" && docker --version
+          echo "🧰 compose:" && docker compose version
+          echo "🏷️  runner: ${RUNNER_NAME:-unknown} (${RUNNER_OS:-?}/${RUNNER_ARCH:-?})"
+          echo "📁 workspace: ${GITHUB_WORKSPACE:-?}"
+          echo "📍 pwd: $(pwd)"
+
+      - name: 📂 Repo status (@ /opt/app)
+        run: |
+          git -C /opt/app rev-parse --show-toplevel
+          echo "— remotes —"
           git -C /opt/app remote -v || true
+          echo "— status —"
+          git -C /opt/app status --short || true
