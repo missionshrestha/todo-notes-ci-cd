@@ -16,7 +16,7 @@ on:
       - "v*"
 
 env:
-  COMPOSE_FILE: compose/docker-compose.prod.yml
+  COMPOSE_FILE: compose/docker-compose-prod.yml
   COMPOSE_PROJECT_NAME: notes-prod
 
 jobs:
@@ -72,13 +72,22 @@ jobs:
         run: |
           set -euo pipefail
           git fetch --all --prune --tags
+
+          git restore --staged -A || true
+          git checkout -- .
+          git reset --hard
+          git clean -xdf -e backend/.env.prod -e backend/.env.dev
+
           REF="${{ steps.pick.outputs.ref }}"
           if git rev-parse --verify "origin/$REF" >/dev/null 2>&1; then
             git checkout -B "$REF" "origin/$REF"
           else
-            # assume exact tag or commit SHA
             git checkout -f "$REF"
           fi
+
+          git submodule sync --recursive || true
+          git submodule update --init --recursive --force || true
+
           git --no-pager log -1 --oneline
 
       - name: 🔐 Ensure backend/.env.prod exists
@@ -92,7 +101,7 @@ jobs:
           set -euo pipefail
           echo "Using backend target: ${{ inputs.backend_target }}"
           # If your compose uses a fixed target, you can toggle it like this:
-          # sed -i 's/^\(\s*target:\s*\).*/\1${{ inputs.backend_target }}/' compose/docker-compose.prod.yml
+          # sed -i 's/^\(\s*target:\s*\).*/\1${{ inputs.backend_target }}/' compose/docker-compose-prod.yml
 
       - name: 🧰 Compose config sanity
         run: |
