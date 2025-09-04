@@ -72,13 +72,22 @@ jobs:
         run: |
           set -euo pipefail
           git fetch --all --prune --tags
+
+          git restore --staged -A || true
+          git checkout -- .
+          git reset --hard
+          git clean -xdf -e backend/.env.prod -e backend/.env.dev
+
           REF="${{ steps.pick.outputs.ref }}"
           if git rev-parse --verify "origin/$REF" >/dev/null 2>&1; then
             git checkout -B "$REF" "origin/$REF"
           else
-            # assume exact tag or commit SHA
             git checkout -f "$REF"
           fi
+
+          git submodule sync --recursive || true
+          git submodule update --init --recursive --force || true
+
           git --no-pager log -1 --oneline
 
       - name: 🔐 Ensure backend/.env.prod exists

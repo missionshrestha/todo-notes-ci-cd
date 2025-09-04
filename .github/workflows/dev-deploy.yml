@@ -51,13 +51,24 @@ jobs:
       - name: 📦 Fetch & reset working copy
         run: |
           git fetch --all --prune --tags
+
+          git restore --staged -A || true
+          git checkout -- .
+          git reset --hard
+          git clean -xdf -e backend/.env.dev -e backend/.env.prod
+
           REF="${{ steps.pick.outputs.ref }}"
           if git rev-parse --verify "origin/$REF" >/dev/null 2>&1; then
             git checkout -B "$REF" "origin/$REF"
           else
-            # allow exact tag/sha
+            # exact tag or commit SHA
             git checkout -f "$REF"
           fi
+
+          # If using submodules (safe to keep even if not)
+          git submodule sync --recursive || true
+          git submodule update --init --recursive --force || true
+
           git --no-pager log -1 --oneline
 
       - name: 🔐 Check env file presence (backend/.env.dev)
