@@ -16,7 +16,7 @@ on:
       - "v*"
 
 env:
-  COMPOSE_FILE: compose/docker-compose.prod.yml
+  COMPOSE_FILE: compose/docker-compose-prod.yml
   COMPOSE_PROJECT_NAME: notes-prod
 
 jobs:
@@ -92,7 +92,7 @@ jobs:
           set -euo pipefail
           echo "Using backend target: ${{ inputs.backend_target }}"
           # If your compose uses a fixed target, you can toggle it like this:
-          # sed -i 's/^\(\s*target:\s*\).*/\1${{ inputs.backend_target }}/' compose/docker-compose.prod.yml
+          # sed -i 's/^\(\s*target:\s*\).*/\1${{ inputs.backend_target }}/' compose/docker-compose-prod.yml
 
       - name: 🧰 Compose config sanity
         run: |
