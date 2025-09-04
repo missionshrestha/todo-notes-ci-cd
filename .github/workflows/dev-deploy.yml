@@ -1,7 +1,109 @@
-name: DEV Deploy (placeholder)
-on: workflow_dispatch
+name: DEV Deploy
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch or tag to deploy (default: develop)"
+        required: false
+        default: "develop"
+      seed_demo:
+        description: "Seed demo data after migrate? (yes/no)"
+        required: false
+        default: "no"
+
 jobs:
-  noop:
-    runs-on: ubuntu-latest
+  deploy-dev:
+    runs-on: [self-hosted, linux, x64, dev]
+    environment: dev
+    concurrency: deploy-dev
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    defaults:
+      run:
+        shell: bash
+        working-directory: /opt/app
+
     steps:
-      - run: echo "Placeholder – will be replaced in Section 9.1"
+      - name: 🛡️ Trust /opt/app for Git (once per host)
+        run: git config --global --add safe.directory /opt/app || true
+
+      - name: 🖥️ Runner & Docker info
+        run: |
+          echo "👤 user: $(whoami)"
+          echo "🧩 groups:" && id
+          echo "🐳 docker:" && docker --version
+          echo "🧰 compose:" && docker compose version
+          echo "📍 pwd: $(pwd)"
+
+      - name: 🔀 Pick ref to deploy
+        id: pick
+        run: |
+          if [[ -n "${{ inputs.ref }}" ]]; then
+            echo "ref=${{ inputs.ref }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=develop" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 📦 Fetch & reset working copy
+        run: |
+          git fetch --all --prune --tags
+          REF="${{ steps.pick.outputs.ref }}"
+          if git rev-parse --verify "origin/$REF" >/dev/null 2>&1; then
+            git checkout -B "$REF" "origin/$REF"
+          else
+            # allow exact tag/sha
+            git checkout -f "$REF"
+          fi
+          git --no-pager log -1 --oneline
+
+      - name: 🔐 Check env file presence (backend/.env.dev)
+        run: |
+          test -f backend/.env.dev || { echo "::error::Missing backend/.env.dev on host"; exit 1; }
+          echo "Found backend/.env.dev"
+
+      - name: 🧰 Compose config sanity (resolves env_file)
+        run: docker compose -f compose/docker-compose.dev.yml config >/dev/null
+
+      - name: 🧱 Down, Build & start DEV stack
+        run: |
+          docker compose -f compose/docker-compose.dev.yml down
+          docker compose -f compose/docker-compose.dev.yml up -d --build
+
+      - name: ⏳ Wait for backend health (retries)
+        run: |
+          set -e
+          for i in {1..30}; do
+            if curl -fsS http://localhost:8000/api/health/ >/dev/null 2>&1; then
+              echo "Backend health OK"; exit 0
+            fi
+            echo "Waiting for backend... ($i)"
+            sleep 2
+          done
+          echo "::error::Backend did not become healthy in time"
+          docker compose -f compose/docker-compose.dev.yml logs --no-color --tail=200 backend || true
+          exit 1
+
+      - name: 🛠️ Apply Django migrations
+        run: |
+          docker compose -f compose/docker-compose.dev.yml exec -T backend \
+            python backend/app/manage.py migrate --noinput
+
+      - name: 🌱 (Optional) Seed demo data
+        if: ${{ inputs.seed_demo == 'yes' }}
+        run: |
+          docker compose -f compose/docker-compose.dev.yml exec -T backend \
+            python backend/app/manage.py seed_demo --users=3 --notes=12 --password=demo1234
+
+      - name: ✅ Smoke tests
+        run: |
+          set -e
+          curl -fsS http://localhost:8000/api/health/ | tee /tmp/health.json
+          # If your Vite dev server is expected up too:
+          curl -fsS http://localhost:5173/ >/dev/null || echo "Vite dev server not reachable (ok if still warming up)"
+
+      - name: 🧹 Prune dangling images
+        run: docker image prune -f
