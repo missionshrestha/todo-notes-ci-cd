@@ -51,21 +51,16 @@ jobs:
       - name: 📦 Fetch & reset working copy
         run: |
           git fetch --all --prune --tags
-
-          git restore --staged -A || true
-          git checkout -- .
           git reset --hard
-          git clean -xdf -e backend/.env.dev -e backend/.env.prod
+          git clean -ffdx -e backend/.env.dev -e backend/.env.prod
 
           REF="${{ steps.pick.outputs.ref }}"
           if git rev-parse --verify "origin/$REF" >/dev/null 2>&1; then
             git checkout -B "$REF" "origin/$REF"
           else
-            # exact tag or commit SHA
-            git checkout -f "$REF"
+            git checkout -f "$REF"     # exact tag or commit SHA
           fi
 
-          # If using submodules (safe to keep even if not)
           git submodule sync --recursive || true
           git submodule update --init --recursive --force || true
 
