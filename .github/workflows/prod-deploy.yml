@@ -1,7 +1,131 @@
-name: PROD Deploy (placeholder)
-on: workflow_dispatch
+name: PROD Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch, tag, or commit (default: main)"
+        required: false
+        default: "main"
+      backend_target:
+        description: "Backend build target (runtime or nuitka-runtime)"
+        required: false
+        default: "runtime"
+  push:
+    tags:
+      - "v*"
+
+env:
+  COMPOSE_FILE: compose/docker-compose.prod.yml
+  COMPOSE_PROJECT_NAME: notes-prod
+
 jobs:
-  noop:
-    runs-on: ubuntu-latest
+  deploy-prod:
+    name: Deploy to PROD
+    runs-on: [self-hosted, linux, x64, prod]
+    environment: prod                    # approval required in GH UI
+    concurrency:
+      group: deploy-prod                 # prevent overlapping prod deploys
+      cancel-in-progress: false
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    defaults:
+      run:
+        shell: bash
+        working-directory: /opt/app
+
     steps:
-      - run: echo "Placeholder – will be replaced in Section 9.2"
+      - name: 🛡️ Trust /opt/app for Git (once per host)
+        run: git config --global --add safe.directory /opt/app || true
+
+      - name: 🖥️ Host & Docker info
+        run: |
+          set -euo pipefail
+          whoami && hostname
+          docker --version
+          docker compose version
+          echo "PWD=$(pwd)"
+
+      - name: 🔎 Verify repo is writable by runner
+        run: |
+          set -euo pipefail
+          test -w .git/HEAD || {
+            echo "::error::/opt/app is not writable by $(whoami). Fix with 'sudo chown -R runner:runner /opt/app/.git' on the host."
+            ls -ld /opt/app /opt/app/.git || true
+            exit 1
+          }
+
+      - name: 🔀 Select ref
+        id: pick
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "ref=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          elif [[ -n "${{ inputs.ref }}" ]]; then
+            echo "ref=${{ inputs.ref }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=main" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 📦 Fetch code (persistent clone)
+        run: |
+          set -euo pipefail
+          git fetch --all --prune --tags
+          REF="${{ steps.pick.outputs.ref }}"
+          if git rev-parse --verify "origin/$REF" >/dev/null 2>&1; then
+            git checkout -B "$REF" "origin/$REF"
+          else
+            # assume exact tag or commit SHA
+            git checkout -f "$REF"
+          fi
+          git --no-pager log -1 --oneline
+
+      - name: 🔐 Ensure backend/.env.prod exists
+        run: |
+          set -euo pipefail
+          test -f backend/.env.prod || { echo "::error::Missing backend/.env.prod on host"; exit 1; }
+          grep -qE '^DEBUG=False$' backend/.env.prod || echo "::warning::DEBUG is not False in backend/.env.prod"
+
+      - name: (Optional) Switch backend build target
+        run: |
+          set -euo pipefail
+          echo "Using backend target: ${{ inputs.backend_target }}"
+          # If your compose uses a fixed target, you can toggle it like this:
+          # sed -i 's/^\(\s*target:\s*\).*/\1${{ inputs.backend_target }}/' compose/docker-compose.prod.yml
+
+      - name: 🧰 Compose config sanity
+        run: |
+          set -euo pipefail
+          docker compose config >/dev/null
+
+      - name: 🚀 Compose up (build & start)
+        run: |
+          set -euo pipefail
+          DOCKER_BUILDKIT=1 docker compose up -d --build --pull always
+          docker compose ps
+
+      - name: 🔧 DB migrate
+        run: |
+          set -euo pipefail
+          docker compose exec -T backend \
+            python backend/app/manage.py migrate --noinput
+
+      - name: ✅ Smoke test via proxy
+        run: |
+          set -euo pipefail
+          for i in {1..20}; do
+            if curl -fsS --max-time 3 http://localhost/api/health/ >/dev/null; then
+              echo "Proxy health OK"
+              exit 0
+            fi
+            echo "Waiting for proxy/backend... ($i)"
+            sleep 3
+          done
+          echo "::error::Health via proxy failed — dumping logs"
+          docker compose logs --no-color --tail=200 backend reverse-proxy || true
+          exit 1
+
+      - name: 🧹 Prune dangling images
+        if: ${{ always() }}
+        run: docker image prune -f
