@@ -23,9 +23,9 @@ jobs:
   deploy-prod:
     name: Deploy to PROD
     runs-on: [self-hosted, linux, x64, prod]
-    environment: prod                    # approval required in GH UI
+    environment: prod
     concurrency:
-      group: deploy-prod                 # prevent overlapping prod deploys
+      group: deploy-prod
       cancel-in-progress: false
     timeout-minutes: 45
     permissions:
@@ -50,11 +50,8 @@ jobs:
       - name: 🔎 Verify repo is writable by runner
         run: |
           set -euo pipefail
-          test -w .git/HEAD || {
-            echo "::error::/opt/app is not writable by $(whoami). Fix with 'sudo chown -R runner:runner /opt/app/.git' on the host."
-            ls -ld /opt/app /opt/app/.git || true
-            exit 1
-          }
+          ( touch .permcheck && rm -f .permcheck ) || { echo "::error::Working tree not writable"; exit 1; }
+          ( touch .git/permcheck && rm -f .git/permcheck ) || { echo "::error::.git not writable"; exit 1; }
 
       - name: 🔀 Select ref
         id: pick
@@ -68,21 +65,18 @@ jobs:
             echo "ref=main" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: 📦 Fetch code (persistent clone)
+      - name: 📦 Fetch & reset working copy (clean, portable)
         run: |
           set -euo pipefail
           git fetch --all --prune --tags
-
-          git restore --staged -A || true
-          git checkout -- .
           git reset --hard
-          git clean -xdf -e backend/.env.prod -e backend/.env.dev
+          git clean -ffdx -e backend/.env.prod -e backend/.env.dev
 
           REF="${{ steps.pick.outputs.ref }}"
           if git rev-parse --verify "origin/$REF" >/dev/null 2>&1; then
             git checkout -B "$REF" "origin/$REF"
           else
-            git checkout -f "$REF"
+            git checkout -f "$REF"     # exact tag or commit SHA
           fi
 
           git submodule sync --recursive || true
@@ -100,7 +94,7 @@ jobs:
         run: |
           set -euo pipefail
           echo "Using backend target: ${{ inputs.backend_target }}"
-          # If your compose uses a fixed target, you can toggle it like this:
+          # If your compose pins a target, you can toggle it in place:
           # sed -i 's/^\(\s*target:\s*\).*/\1${{ inputs.backend_target }}/' compose/docker-compose-prod.yml
 
       - name: 🧰 Compose config sanity
