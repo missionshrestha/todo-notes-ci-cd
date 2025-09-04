@@ -17,7 +17,7 @@ on:
 
 env:
   COMPOSE_FILE: compose/docker-compose-prod.yml
-  COMPOSE_PROJECT_NAME: notes-prod
+  # COMPOSE_PROJECT_NAME: notes-prod
 
 jobs:
   deploy-prod:
